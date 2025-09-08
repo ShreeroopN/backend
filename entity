@@ -1,0 +1,41 @@
+package com.payment.approval.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "payment")
+public class Payment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String paymentName;
+    private double amount;
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id")
+    private PaymentBatch batch;
+
+    // --- Constructors ---
+    public Payment() {}
+
+    public Payment(String paymentName, double amount, PaymentBatch batch) {
+        this.paymentName = paymentName;
+        this.amount = amount;
+        this.batch = batch;
+    }
+
+    // --- Getters & Setters ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getPaymentName() { return paymentName; }
+    public void setPaymentName(String paymentName) { this.paymentName = paymentName; }
+
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
+
+    public PaymentBatch getBatch() { return batch; }
+    public void setBatch(PaymentBatch batch) { this.batch = batch; }
+}
