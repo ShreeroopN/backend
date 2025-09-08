@@ -1,0 +1,43 @@
+package com.payment.approval.service;
+
+import com.payment.approval.entity.PaymentBatch;
+import com.payment.approval.repository.PaymentBatchRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PaymentBatchService {
+
+    private final PaymentBatchRepository batchRepository;
+
+    public PaymentBatchService(PaymentBatchRepository batchRepository) {
+        this.batchRepository = batchRepository;
+    }
+
+    public List<PaymentBatch> getAllBatches() {
+        return batchRepository.findAll();
+    }
+
+    public PaymentBatch getBatchById(String batchId) {
+        return batchRepository.findByBatchId(batchId)
+                .orElseThrow(() -> new RuntimeException("Batch not found"));
+    }
+
+    public PaymentBatch approveBatch(String batchId) {
+        PaymentBatch batch = getBatchById(batchId);
+        batch.setStatus(PaymentBatch.BatchStatus.APPROVED);
+        return batchRepository.save(batch);
+    }
+
+    public PaymentBatch rejectBatch(String batchId) {
+        PaymentBatch batch = getBatchById(batchId);
+        batch.setStatus(PaymentBatch.BatchStatus.REJECTED);
+        return batchRepository.save(batch);
+    }
+
+    public PaymentBatch createBatch(PaymentBatch batch) {
+        batch.setStatus(PaymentBatch.BatchStatus.PENDING);
+        return batchRepository.save(batch);
+    }
+}
