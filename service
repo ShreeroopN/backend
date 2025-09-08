@@ -9,34 +9,55 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class PaymentBatchService {
+public class ApproverService {
 
     @Autowired
     private PaymentBatchRepository batchRepository;
 
+    // Approver can view all batches
     public List<PaymentBatch> getAllBatches() {
         return batchRepository.findAll();
     }
 
     public PaymentBatch getBatchById(String batchId) {
-        return batchRepository.findByBatchId(batchId)
-                .orElseThrow(() -> new ResourceNotFoundException("Batch with ID " + batchId + " not found"));
+        return batchRepository.findByBatchId(batchId).orElse(null);
     }
 
-    public PaymentBatch approveBatch(String batchId) {
+    // Approve step by step
+    public PaymentBatch approveBatch(String batchId, String approverName) {
         PaymentBatch batch = getBatchById(batchId);
-        batch.setStatus(PaymentBatch.BatchStatus.APPROVED);
+        if (batch == null) return null;
+
+        if (batch.getStatus() == PaymentBatch.BatchStatus.REJECTED
+                || batch.getStatus() == PaymentBatch.BatchStatus.APPROVED) {
+            return batch; // already closed
+        }
+
+        int nextLevel = batch.getCurrentApprovalLevel() + 1;
+
+        if (nextLevel < batch.getRequiredApprovalLevel()) {
+            batch.setCurrentApprovalLevel(nextLevel);
+            batch.setStatus(PaymentBatch.BatchStatus.IN_PROGRESS);
+        } else if (nextLevel == batch.getRequiredApprovalLevel()) {
+            batch.setCurrentApprovalLevel(nextLevel);
+            batch.setStatus(PaymentBatch.BatchStatus.APPROVED);
+        }
+
+        batch.setApprovedBy(approverName);
+        batch.setApprovedAt(LocalDateTime.now());
+
         return batchRepository.save(batch);
     }
 
-    public PaymentBatch rejectBatch(String batchId) {
+    // Reject batch
+    public PaymentBatch rejectBatch(String batchId, String approverName) {
         PaymentBatch batch = getBatchById(batchId);
+        if (batch == null) return null;
+
         batch.setStatus(PaymentBatch.BatchStatus.REJECTED);
-        return batchRepository.save(batch);
-    }
+        batch.setApprovedBy(approverName);
+        batch.setApprovedAt(LocalDateTime.now());
 
-    public PaymentBatch createBatch(PaymentBatch batch) {
-        batch.setStatus(PaymentBatch.BatchStatus.PENDING);
         return batchRepository.save(batch);
     }
 }
