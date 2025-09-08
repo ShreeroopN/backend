@@ -1,7 +1,9 @@
 package com.payment.approval.service;
 
 import com.payment.approval.entity.PaymentBatch;
+import com.payment.approval.exception.ResourceNotFoundException;
 import com.payment.approval.repository.PaymentBatchRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,11 +11,8 @@ import java.util.List;
 @Service
 public class PaymentBatchService {
 
-    private final PaymentBatchRepository batchRepository;
-
-    public PaymentBatchService(PaymentBatchRepository batchRepository) {
-        this.batchRepository = batchRepository;
-    }
+    @Autowired
+    private PaymentBatchRepository batchRepository;
 
     public List<PaymentBatch> getAllBatches() {
         return batchRepository.findAll();
@@ -21,7 +20,7 @@ public class PaymentBatchService {
 
     public PaymentBatch getBatchById(String batchId) {
         return batchRepository.findByBatchId(batchId)
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Batch with ID " + batchId + " not found"));
     }
 
     public PaymentBatch approveBatch(String batchId) {
