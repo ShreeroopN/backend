@@ -1,0 +1,49 @@
+package com.payment.approval.controller;
+
+import com.payment.approval.entity.PaymentBatch;
+import com.payment.approval.service.PaymentBatchService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/batches")
+@CrossOrigin(origins = "*") // allow frontend (HTML/JS) to call this backend
+public class PaymentBatchController {
+
+    private final PaymentBatchService batchService;
+
+    public PaymentBatchController(PaymentBatchService batchService) {
+        this.batchService = batchService;
+    }
+
+    // Get all batches
+    @GetMapping
+    public List<PaymentBatch> getAllBatches() {
+        return batchService.getAllBatches();
+    }
+
+    // Get details of a batch
+    @GetMapping("/{batchId}")
+    public PaymentBatch getBatch(@PathVariable String batchId) {
+        return batchService.getBatchById(batchId);
+    }
+
+    // Create a new batch (POST request with JSON body)
+    @PostMapping
+    public PaymentBatch createBatch(@RequestBody PaymentBatch batch) {
+        return batchService.createBatch(batch);
+    }
+
+    // Approve a batch
+    @PutMapping("/{batchId}/approve")
+    public PaymentBatch approveBatch(@PathVariable String batchId) {
+        return batchService.approveBatch(batchId);
+    }
+
+    // Reject a batch
+    @PutMapping("/{batchId}/reject")
+    public PaymentBatch rejectBatch(@PathVariable String batchId) {
+        return batchService.rejectBatch(batchId);
+    }
+}
