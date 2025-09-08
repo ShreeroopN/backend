@@ -1,20 +1,19 @@
 package com.payment.approval.service;
 
 import com.payment.approval.entity.PaymentBatch;
-import com.payment.approval.exception.ResourceNotFoundException;
 import com.payment.approval.repository.PaymentBatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class ApproverService {
+public class PaymentBatchService {
 
     @Autowired
     private PaymentBatchRepository batchRepository;
 
-    // Approver can view all batches
     public List<PaymentBatch> getAllBatches() {
         return batchRepository.findAll();
     }
@@ -23,7 +22,24 @@ public class ApproverService {
         return batchRepository.findByBatchId(batchId).orElse(null);
     }
 
-    // Approve step by step
+    // ✅ Treasurer/Manager will create batch
+    public PaymentBatch createBatch(PaymentBatch batch) {
+        batch.setStatus(PaymentBatch.BatchStatus.PENDING);
+        batch.setCurrentApprovalLevel(0);
+
+        // Decide how many approvers are required
+        if (batch.getAmount() < 100000) {
+            batch.setRequiredApprovalLevel(1);
+        } else if (batch.getAmount() < 500000) {
+            batch.setRequiredApprovalLevel(2);
+        } else {
+            batch.setRequiredApprovalLevel(3);
+        }
+
+        return batchRepository.save(batch);
+    }
+
+    // ✅ Approver will approve step by step
     public PaymentBatch approveBatch(String batchId, String approverName) {
         PaymentBatch batch = getBatchById(batchId);
         if (batch == null) return null;
@@ -49,7 +65,7 @@ public class ApproverService {
         return batchRepository.save(batch);
     }
 
-    // Reject batch
+    // ✅ Approver can reject anytime
     public PaymentBatch rejectBatch(String batchId, String approverName) {
         PaymentBatch batch = getBatchById(batchId);
         if (batch == null) return null;
