@@ -1,0 +1,34 @@
+package com.training.springusecasewithjpa.controller;
+
+import com.training.springusecasewithjpa.entities.Approver;
+import com.training.springusecasewithjpa.service.ApproverService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/approvers")
+@Tag(name = "Approver Management", description = "Operations related to batch approvers")
+public class ApproverController {
+
+    @Autowired
+    private ApproverService approverService;
+
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<List<Approver>> getApproversByBatch(@PathVariable String batchId) {
+        return ResponseEntity.ok(approverService.getApproversByBatch(batchId));
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Approver> approve(@PathVariable Long id) {
+        return ResponseEntity.ok(approverService.approve(id));
+    }
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<Approver> reject(@PathVariable Long id) {
+        return ResponseEntity.ok(approverService.reject(id));
+    }
+}
