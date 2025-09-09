@@ -18,6 +18,7 @@ public class Approver {
     private Batch batch;
 
     private boolean approved = false;
+    private boolean rejected = false;  // new field
 
     public Approver() {}
 
@@ -41,4 +42,7 @@ public class Approver {
 
     public boolean isApproved() { return approved; }
     public void setApproved(boolean approved) { this.approved = approved; }
+
+    public boolean isRejected() { return rejected; }
+    public void setRejected(boolean rejected) { this.rejected = rejected; }
 }
