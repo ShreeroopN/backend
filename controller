@@ -1,49 +1,32 @@
-package com.payment.approval.controller;
+package com.scb.axcessspringb.controller;
 
-import com.payment.approval.entity.PaymentBatch;
-import com.payment.approval.service.PaymentBatchService;
+import com.scb.axcessspringb.model.Approver;
+import com.scb.axcessspringb.service.ApproverService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/batches")
-@CrossOrigin(origins = "*") // allow frontend (HTML/JS) to call this backend
-public class PaymentBatchController {
+@RequestMapping("/api/approvers")
+@CrossOrigin(origins = "http://localhost:3000")
+public class ApproverController {
 
-    private final PaymentBatchService batchService;
+    @Autowired private ApproverService approverService;
 
-    public PaymentBatchController(PaymentBatchService batchService) {
-        this.batchService = batchService;
+    @GetMapping("/batch/{batchId}")
+    public ResponseEntity<List<Approver>> getApprovers(@PathVariable String batchId) {
+        return ResponseEntity.ok(approverService.getApproversForBatch(batchId));
     }
 
-    // Get all batches
-    @GetMapping
-    public List<PaymentBatch> getAllBatches() {
-        return batchService.getAllBatches();
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<Approver> approve(@PathVariable Long id) {
+        return ResponseEntity.ok(approverService.approveBatch(id));
     }
 
-    // Get details of a batch
-    @GetMapping("/{batchId}")
-    public PaymentBatch getBatch(@PathVariable String batchId) {
-        return batchService.getBatchById(batchId);
-    }
-
-    // Create a new batch (POST request with JSON body)
-    @PostMapping
-    public PaymentBatch createBatch(@RequestBody PaymentBatch batch) {
-        return batchService.createBatch(batch);
-    }
-
-    // Approve a batch
-    @PutMapping("/{batchId}/approve")
-    public PaymentBatch approveBatch(@PathVariable String batchId) {
-        return batchService.approveBatch(batchId);
-    }
-
-    // Reject a batch
-    @PutMapping("/{batchId}/reject")
-    public PaymentBatch rejectBatch(@PathVariable String batchId) {
-        return batchService.rejectBatch(batchId);
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<Approver> reject(@PathVariable Long id) {
+        return ResponseEntity.ok(approverService.rejectBatch(id));
     }
 }
