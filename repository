@@ -1,7 +1,12 @@
-package com.payment.approval.repository;
+package com.scb.axcessspringb.repository;
 
-import com.payment.approval.entity.Payment;
+import com.scb.axcessspringb.model.Approver;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
+import java.util.List;
+
+@Repository
+public interface ApproverRepository extends JpaRepository<Approver, Long> {
+    List<Approver> findByBatchId(String batchId);
 }
