@@ -1,41 +1,44 @@
-package com.payment.approval.entity;
+package com.scb.axcessspringb.model;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "payment")
-public class Payment {
+@Table(name = "approvers")
+public class Approver {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String paymentName;
-    private double amount;
+    private String name;   // approver name
+    private int level;     // 1 = first approver, 2 = second approver, etc.
 
     @ManyToOne
     @JoinColumn(name = "batch_id")
-    private PaymentBatch batch;
+    private Batch batch;
 
-    // --- Constructors ---
-    public Payment() {}
+    private boolean approved = false;
 
-    public Payment(String paymentName, double amount, PaymentBatch batch) {
-        this.paymentName = paymentName;
-        this.amount = amount;
+    public Approver() {}
+
+    public Approver(String name, int level, Batch batch) {
+        this.name = name;
+        this.level = level;
         this.batch = batch;
     }
 
-    // --- Getters & Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getPaymentName() { return paymentName; }
-    public void setPaymentName(String paymentName) { this.paymentName = paymentName; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public double getAmount() { return amount; }
-    public void setAmount(double amount) { this.amount = amount; }
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
 
-    public PaymentBatch getBatch() { return batch; }
-    public void setBatch(PaymentBatch batch) { this.batch = batch; }
+    public Batch getBatch() { return batch; }
+    public void setBatch(Batch batch) { this.batch = batch; }
+
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
 }
