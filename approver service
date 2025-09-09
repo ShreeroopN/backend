@@ -1,0 +1,11 @@
+package com.training.springusecasewithjpa.service;
+
+import com.training.springusecasewithjpa.entities.Approver;
+
+import java.util.List;
+
+public interface ApproverService {
+    List<Approver> getApproversByBatch(String batchId);
+    Approver approve(Long approverId);
+    Approver reject(Long approverId);
+}
