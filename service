@@ -1,48 +1,63 @@
-package com.scb.axcessspringb.model;
+package com.scb.axcessspringb.service;
 
-import jakarta.persistence.*;
+import com.scb.axcessspringb.model.Approver;
+import com.scb.axcessspringb.model.Batch;
+import com.scb.axcessspringb.repository.ApproverRepository;
+import com.scb.axcessspringb.repository.BatchRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-@Entity
-@Table(name = "approvers")
-public class Approver {
+import java.util.List;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Service
+public class ApproverService {
 
-    private String name;   // approver name
-    private int level;     // 1 = first approver, 2 = second approver, etc.
+    @Autowired private ApproverRepository approverRepository;
+    @Autowired private BatchRepository batchRepository;
 
-    @ManyToOne
-    @JoinColumn(name = "batch_id")
-    private Batch batch;
-
-    private boolean approved = false;
-    private boolean rejected = false;  // new field
-
-    public Approver() {}
-
-    public Approver(String name, int level, Batch batch) {
-        this.name = name;
-        this.level = level;
-        this.batch = batch;
+    public List<Approver> getApproversForBatch(String batchId) {
+        return approverRepository.findByBatchId(batchId);
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Approver approveBatch(Long approverId) {
+        Approver approver = approverRepository.findById(approverId).orElse(null);
+        if (approver != null) {
+            approver.setApproved(true);
+            approver.setRejected(false);
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+            Batch batch = approver.getBatch();
 
-    public int getLevel() { return level; }
-    public void setLevel(int level) { this.level = level; }
+            // check if all approvers are approved
+            boolean allApproved = true;
+            for (Approver a : approverRepository.findByBatchId(batch.getId())) {
+                if (!a.isApproved()) {
+                    allApproved = false;
+                    break;
+                }
+            }
 
-    public Batch getBatch() { return batch; }
-    public void setBatch(Batch batch) { this.batch = batch; }
+            if (allApproved) {
+                batch.setStatus("approved");
+                batchRepository.save(batch);
+            }
 
-    public boolean isApproved() { return approved; }
-    public void setApproved(boolean approved) { this.approved = approved; }
+            approverRepository.save(approver);
+        }
+        return approver;
+    }
 
-    public boolean isRejected() { return rejected; }
-    public void setRejected(boolean rejected) { this.rejected = rejected; }
+    public Approver rejectBatch(Long approverId) {
+        Approver approver = approverRepository.findById(approverId).orElse(null);
+        if (approver != null) {
+            approver.setRejected(true);
+            approver.setApproved(false);
+
+            Batch batch = approver.getBatch();
+            batch.setStatus("rejected"); // one reject is enough
+            batchRepository.save(batch);
+
+            approverRepository.save(approver);
+        }
+        return approver;
+    }
 }
