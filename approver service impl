@@ -1,0 +1,40 @@
+package com.training.springusecasewithjpa.service;
+
+import com.training.springusecasewithjpa.dao.ApproverRepository;
+import com.training.springusecasewithjpa.entities.Approver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class ApproverServiceImpl implements ApproverService {
+
+    @Autowired
+    private ApproverRepository approverRepository;
+
+    @Override
+    public List<Approver> getApproversByBatch(String batchId) {
+        return approverRepository.findByBatchId(batchId);
+    }
+
+    @Override
+    public Approver approve(Long approverId) {
+        Approver approver = approverRepository.findById(approverId).orElse(null);
+        if (approver != null) {
+            approver.setStatus("APPROVED");
+            return approverRepository.save(approver);
+        }
+        return null;
+    }
+
+    @Override
+    public Approver reject(Long approverId) {
+        Approver approver = approverRepository.findById(approverId).orElse(null);
+        if (approver != null) {
+            approver.setStatus("REJECTED");
+            return approverRepository.save(approver);
+        }
+        return null;
+    }
+}
