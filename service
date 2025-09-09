@@ -1,79 +1,50 @@
-package com.payment.approval.service;
+package com.scb.axcessspringb.service;
 
-import com.payment.approval.entity.PaymentBatch;
-import com.payment.approval.repository.PaymentBatchRepository;
+import com.scb.axcessspringb.model.Approver;
+import com.scb.axcessspringb.model.Batch;
+import com.scb.axcessspringb.repository.ApproverRepository;
+import com.scb.axcessspringb.repository.BatchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class PaymentBatchService {
+public class ApproverService {
 
-    @Autowired
-    private PaymentBatchRepository batchRepository;
+    @Autowired private ApproverRepository approverRepository;
+    @Autowired private BatchRepository batchRepository;
 
-    public List<PaymentBatch> getAllBatches() {
-        return batchRepository.findAll();
+    public List<Approver> getApproversForBatch(String batchId) {
+        return approverRepository.findByBatchId(batchId);
     }
 
-    public PaymentBatch getBatchById(String batchId) {
-        return batchRepository.findByBatchId(batchId).orElse(null);
-    }
+    public Approver approveBatch(Long approverId) {
+        Approver approver = approverRepository.findById(approverId).orElse(null);
+        if (approver != null) {
+            approver.setApproved(true);
 
-    // ✅ Treasurer/Manager will create batch
-    public PaymentBatch createBatch(PaymentBatch batch) {
-        batch.setStatus(PaymentBatch.BatchStatus.PENDING);
-        batch.setCurrentApprovalLevel(0);
+            Batch batch = approver.getBatch();
 
-        // Decide how many approvers are required
-        if (batch.getAmount() < 100000) {
-            batch.setRequiredApprovalLevel(1);
-        } else if (batch.getAmount() < 500000) {
-            batch.setRequiredApprovalLevel(2);
-        } else {
-            batch.setRequiredApprovalLevel(3);
+            // Simple rule: one approver if < 1 lakh, two approvers if < 5 lakh
+            BigDecimal amount = batch.getTotalAmount();
+
+            boolean allApproved = true;
+            for (Approver a : approverRepository.findByBatchId(batch.getId())) {
+                if (!a.isApproved()) {
+                    allApproved = false;
+                    break;
+                }
+            }
+
+            if (allApproved) {
+                batch.setStatus("approved");
+                batchRepository.save(batch);
+            }
+
+            approverRepository.save(approver);
         }
-
-        return batchRepository.save(batch);
-    }
-
-    // ✅ Approver will approve step by step
-    public PaymentBatch approveBatch(String batchId, String approverName) {
-        PaymentBatch batch = getBatchById(batchId);
-        if (batch == null) return null;
-
-        if (batch.getStatus() == PaymentBatch.BatchStatus.REJECTED
-                || batch.getStatus() == PaymentBatch.BatchStatus.APPROVED) {
-            return batch; // already closed
-        }
-
-        int nextLevel = batch.getCurrentApprovalLevel() + 1;
-
-        if (nextLevel < batch.getRequiredApprovalLevel()) {
-            batch.setCurrentApprovalLevel(nextLevel);
-            batch.setStatus(PaymentBatch.BatchStatus.IN_PROGRESS);
-        } else if (nextLevel == batch.getRequiredApprovalLevel()) {
-            batch.setCurrentApprovalLevel(nextLevel);
-            batch.setStatus(PaymentBatch.BatchStatus.APPROVED);
-        }
-
-        batch.setApprovedBy(approverName);
-        batch.setApprovedAt(LocalDateTime.now());
-
-        return batchRepository.save(batch);
-    }
-
-    // ✅ Approver can reject anytime
-    public PaymentBatch rejectBatch(String batchId, String approverName) {
-        PaymentBatch batch = getBatchById(batchId);
-        if (batch == null) return null;
-
-        batch.setStatus(PaymentBatch.BatchStatus.REJECTED);
-        batch.setApprovedBy(approverName);
-        batch.setApprovedAt(LocalDateTime.now());
-
-        return batchRepository.save(batch);
+        return approver;
     }
 }
