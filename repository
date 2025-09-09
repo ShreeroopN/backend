@@ -8,5 +8,9 @@ import java.util.List;
 
 @Repository
 public interface ApproverRepository extends JpaRepository<Approver, Long> {
-    List<Approver> findByBatchId(String batchId);
+    // Use nested property path: batch.id
+    List<Approver> findByBatch_Id(String batchId);
+
+    // (Optional) if you want them ordered by level:
+    // List<Approver> findByBatch_IdOrderByLevelAsc(String batchId);
 }
