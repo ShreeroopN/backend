@@ -16,48 +16,46 @@ public class ApproverService {
     @Autowired private BatchRepository batchRepository;
 
     public List<Approver> getApproversForBatch(String batchId) {
-        return approverRepository.findByBatchId(batchId);
+        return approverRepository.findByBatch_Id(batchId);
     }
 
     public Approver approveBatch(Long approverId) {
         Approver approver = approverRepository.findById(approverId).orElse(null);
-        if (approver != null) {
-            approver.setApproved(true);
-            approver.setRejected(false);
+        if (approver == null) return null;
 
-            Batch batch = approver.getBatch();
+        approver.setApproved(true);
+        approver.setRejected(false);
+        approverRepository.save(approver); // save first
 
-            // check if all approvers are approved
-            boolean allApproved = true;
-            for (Approver a : approverRepository.findByBatchId(batch.getId())) {
-                if (!a.isApproved()) {
-                    allApproved = false;
-                    break;
-                }
+        Batch batch = approver.getBatch();
+
+        // if all approvers of this batch are approved -> mark batch approved
+        boolean allApproved = true;
+        for (Approver a : approverRepository.findByBatch_Id(batch.getId())) {
+            if (!a.isApproved()) {
+                allApproved = false;
+                break;
             }
-
-            if (allApproved) {
-                batch.setStatus("approved");
-                batchRepository.save(batch);
-            }
-
-            approverRepository.save(approver);
+        }
+        if (allApproved) {
+            batch.setStatus("approved");
+            batchRepository.save(batch);
         }
         return approver;
     }
 
     public Approver rejectBatch(Long approverId) {
         Approver approver = approverRepository.findById(approverId).orElse(null);
-        if (approver != null) {
-            approver.setRejected(true);
-            approver.setApproved(false);
+        if (approver == null) return null;
 
-            Batch batch = approver.getBatch();
-            batch.setStatus("rejected"); // one reject is enough
-            batchRepository.save(batch);
+        approver.setRejected(true);
+        approver.setApproved(false);
+        approverRepository.save(approver);
 
-            approverRepository.save(approver);
-        }
+        Batch batch = approver.getBatch();
+        batch.setStatus("rejected"); // one reject closes the batch
+        batchRepository.save(batch);
+
         return approver;
     }
 }
